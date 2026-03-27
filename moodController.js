@@ -124,7 +124,8 @@ const getMoodStats = async (req, res) => {
 module.exports = {
   saveMood,
   getUserMoods,
+  getMoodStats,
   updateMood,
   deleteMood,
-  getMoodStats
+  getAllMoods
 };

@@ -36,23 +36,16 @@ app.post('/api/auth/logout', (req, res) => {
 });
 
 // --- 3. Protected Mood Tracker Routes ---
-// Semua rute di bawah ini wajib membawa "Bearer Token" di Header Authorization
 
-// Create: Save new mood
-app.post('/api/moods', authenticateToken, mood.saveMood);
-
-// Read: Get mood history for specific user (Calendar feature)
+// Pindahkan yang ada kata /user/ dan /stats/ ke PALING ATAS
 app.get('/api/moods/user/:userId', authenticateToken, mood.getUserMoods);
-
-// Read: Get mood statistics (Bar Chart feature)
 app.get('/api/moods/stats/:userId', authenticateToken, mood.getMoodStats);
 
-// Update & Delete: Edit or remove mood entries
+// Baru sisanya di bawahnya
+app.post('/api/moods', authenticateToken, mood.saveMood);
+app.get('/api/moods', authenticateToken, mood.getAllMoods);
 app.put('/api/moods/:id', authenticateToken, mood.updateMood);
 app.delete('/api/moods/:id', authenticateToken, mood.deleteMood);
-
-// Extra: Get all moods for debugging/admin
-app.get('/api/moods', authenticateToken, mood.getAllMoods);
 
 // --- 4. 404 Error Handling ---
 app.use((req, res) => {
