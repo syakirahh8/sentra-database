@@ -21,14 +21,14 @@ const saveMood = async (req, res) => {
   // Jika ada error (misal: tabel ga ketemu atau koneksi putus)
   if (error) {
     return res.status(400).json({ 
-      message: "Gagal simpan mood", 
+      message: "Yah gagal bes simpan moodnya", 
       error: error.message 
     });
   }
 
   // Jika berhasil
   res.status(201).json({
-    message: "Mood berhasil dicatat! Semoga harimu menyenangkan ✨",
+    message: "Mood berhasil disimpa yeyeyeyyeye!!!, semangat hidup yh",
     data: data
   });
 };

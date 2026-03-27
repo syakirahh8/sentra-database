@@ -7,7 +7,7 @@ app.use(express.json());
 
 // 1. Endpoint Test
 app.get('/', (req, res) => {
-  res.send('Server Sentra Mood sudah jalan! 🚀');
+  res.send('ANJAY JALAN');
 });
 
 // 2. Rute Auth (Hubungkan ke file temanmu)
@@ -20,6 +20,6 @@ app.get('/api/moods', mood.getAllMoods);
 
 const PORT = 3000;
 app.listen(PORT, () => {
-  console.log(`\n✅ Server Berhasil Jalan!`);
-  console.log(`🔗 Link: http://localhost:${PORT}`);
+  console.log(`\nYAYYYEYEYE JALAN`);
+  console.log(`Link: http://localhost:${PORT}`);
 });
