@@ -121,6 +121,16 @@ const getMoodStats = async (req, res) => {
   res.status(200).json(stats);
 };
 
+const getAllMoods = async (req, res) => {
+  const { data, error } = await supabase
+    .from('moods')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) return res.status(400).json({ error: error.message });
+  res.status(200).json(data);
+};
+
 module.exports = {
   saveMood,
   getUserMoods,
