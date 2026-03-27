@@ -1,25 +1,70 @@
+require('dotenv').config();
 const express = require('express');
-const auth = require('./authController'); // Tugas temanmu
-const mood = require('./moodController'); // Tugas kamu
+const cors = require('cors');
+
+// Import Controllers
+const auth = require('./authController'); 
+const mood = require('./moodController');
+
+// Import Middleware (Satpam Token)
+const authenticateToken = require('./authMiddleware'); 
 
 const app = express();
-app.use(express.json());
 
-// 1. Endpoint Test
+// --- Global Middleware ---
+app.use(cors()); // Mengizinkan akses dari Frontend (React)
+app.use(express.json()); // Parsing data JSON dari body request
+
+// --- 1. Health Check ---
 app.get('/', (req, res) => {
-  res.send('ANJAY JALAN');
+  res.status(200).json({ 
+    status: 'success', 
+    message: 'Sentra Mood API is active and running.' 
+  });
 });
 
-// 2. Rute Auth (Hubungkan ke file temanmu)
+// --- 2. Authentication Routes ---
 app.post('/api/auth/register', auth.register);
-app.post('/api/auth/login', auth.login); // Pastikan temanmu sudah buat fungsi login ya!
+app.post('/api/auth/login', auth.login);
 
-// 3. Rute Mood (Hubungkan ke file kamu)
-app.post('/api/moods', mood.saveMood);
-app.get('/api/moods', mood.getAllMoods);
+// Logout (Frontend clears token, but we provide this for API compliance)
+app.post('/api/auth/logout', (req, res) => {
+  res.status(200).json({ 
+    status: 'success', 
+    message: 'Logged out successfully.' 
+  });
+});
 
-const PORT = 3000;
+// --- 3. Protected Mood Tracker Routes ---
+// Semua rute di bawah ini wajib membawa "Bearer Token" di Header Authorization
+
+// Create: Save new mood
+app.post('/api/moods', authenticateToken, mood.saveMood);
+
+// Read: Get mood history for specific user (Calendar feature)
+app.get('/api/moods/user/:userId', authenticateToken, mood.getUserMoods);
+
+// Read: Get mood statistics (Bar Chart feature)
+app.get('/api/moods/stats/:userId', authenticateToken, mood.getMoodStats);
+
+// Update & Delete: Edit or remove mood entries
+app.put('/api/moods/:id', authenticateToken, mood.updateMood);
+app.delete('/api/moods/:id', authenticateToken, mood.deleteMood);
+
+// Extra: Get all moods for debugging/admin
+app.get('/api/moods', authenticateToken, mood.getAllMoods);
+
+// --- 4. 404 Error Handling ---
+app.use((req, res) => {
+  res.status(404).json({ 
+    status: 'error', 
+    message: 'API endpoint not found.' 
+  });
+});
+
+// --- 5. Server Initialization ---
+const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
-  console.log(`\nYAYYYEYEYE JALAN`);
-  console.log(`Link: http://localhost:${PORT}`);
+  console.log(`[INFO] Sentra Mood API server successfully started on port ${PORT}`);
 });
