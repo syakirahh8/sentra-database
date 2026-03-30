@@ -1,0 +1,14 @@
+const express = require('express');
+const router = express.Router();
+const moodController = require('../controllers/moodController');
+const authenticateToken = require('../middleware/authMiddleware');
+
+// Semua route mood butuh autentikasi (kecuali kalau ada yang public)
+router.get('/stats', authenticateToken, moodController.getMoodStats);
+router.get('/', authenticateToken, moodController.getUserMoods);
+
+router.post('/', authenticateToken, moodController.saveMood);
+router.put('/:id', authenticateToken, moodController.updateMood);
+router.delete('/:id', authenticateToken, moodController.deleteMood);
+
+module.exports = router;
