@@ -1,53 +1,99 @@
 const supabase = require('./supabaseClient');
 
-// --- REGISTER (Daftar Akun Baru) ---
+// --- REGISTER ---
 const register = async (req, res) => {
   const { email, password, full_name } = req.body;
 
   try {
-    // Fungsi bawaan Supabase untuk mendaftarkan user
+    if (!email || !password) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Email dan password wajib diisi'
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Password minimal 6 karakter'
+      });
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name } // Menyimpan nama lengkap ke metadata user
+        data: { full_name }
       }
     });
 
-    if (error) throw error;
+    if (error) {
+      return res.status(400).json({
+        status: 'error',
+        message: error.message
+      });
+    }
 
     res.status(201).json({
       status: 'success',
-      message: 'Registration successful! Check your email for verification (if enabled).',
+      message: 'Registrasi berhasil! Cek email kamu ya!',
       user: data.user
     });
+
   } catch (error) {
-    res.status(400).json({ status: 'error', message: error.message });
+    console.error(error); // tambahan biar kamu bisa liat error di terminal
+    res.status(500).json({
+      status: 'error',
+      message: 'Terjadi kesalahan pada server'
+    });
   }
 };
 
-// --- LOGIN (Masuk Akun) ---
+// --- LOGIN ---
 const login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Fungsi bawaan Supabase untuk login
+    if (!email || !password) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Email dan password wajib diisi'
+      });
+    }
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error) throw error;
+    if (error) {
+      return res.status(400).json({
+        status: 'error',
+        message: error.message
+      });
+    }
 
-    // Supabase otomatis memberikan 'access_token' di dalam data.session
+    // Cek apakah email sudah dikonfirmasi
+    if (!data.user.email_confirmed_at) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Email belum diverifikasi. Cek email dulu ya!'
+      });
+    }
+
     res.status(200).json({
       status: 'success',
-      message: 'Login successful!',
-      token: data.session.access_token, // Token otomatis dari Supabase
+      message: 'Login berhasil!',
+      token: data.session.access_token,
       user: data.user
     });
+
   } catch (error) {
-    res.status(401).json({ status: 'error', message: 'Invalid login credentials.' });
+    console.error(error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Terjadi kesalahan server'
+    });
   }
 };
 
