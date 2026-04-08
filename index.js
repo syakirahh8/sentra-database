@@ -9,19 +9,19 @@ const app = express();
 
 // Konfigurasi CORS
 app.use(cors({
-  // Izinkan React (5173) tembus ke Node.js
-  origin: ['http://localhost:5173', 'http://localhost:5000'], 
-  credentials: true
+  // Tambahin 127.0.0.1 buat jaga-jaga kalau Vite lu lari ke situ
+  origin: [
+    'http://localhost:5173', 
+    'http://127.0.0.1:5173', 
+    'http://localhost:3000'
+  ], 
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use(express.json());
-
-app.get('/', (req, res) => {
-  res.status(200).json({ 
-    status: 'success', 
-    message: 'Sentra Mood API is active and running' 
-  });
-});
+// Tambahin ini juga di bawahnya buat nge-handle Preflight request dari browser
+app.options('*', cors());
 
 // Gunakan routes
 app.use('/api/auth', authRoutes);
