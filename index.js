@@ -7,34 +7,29 @@ const moodRoutes = require('./routes/moodRoutes');
 
 const app = express();
 
-// 🔥 1. CORS DULU (BIAR PREFLIGHT GA DIBLOCK)
-app.use(cors({
-  origin: true, // sementara bebasin dulu biar ga ribet
-  credentials: true
-}));
+// 🔥 INI PALING AMAN (NO CONFIG RIBET)
+app.use(cors());
 
-// 🔥 2. JSON PARSER
+// 🔥 WAJIB ADA
 app.use(express.json());
 
-// 🔥 3. ROUTES
+// 🔥 HANDLE PREFLIGHT MANUAL (INI YANG NOLONG LO)
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "*");
+  res.header("Access-Control-Allow-Methods", "*");
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+
+  next();
+});
+
+// ROUTES
 app.use('/api/auth', authRoutes);
 app.use('/api/moods', moodRoutes);
 
-// 🔥 4. TEST ENDPOINT (BIAR LO TAU SERVER HIDUP)
-app.get('/', (req, res) => {
-  res.send('API jalan 🔥');
-});
-
-// 🔥 5. 404
-app.use((req, res) => {
-  res.status(404).json({ 
-    status: 'error', 
-    message: 'API endpoint not found.' 
-  });
-});
-
-// 🔥 6. START SERVER
-const PORT = process.env.PORT || 5000; 
-app.listen(PORT, () => {
-  console.log(`Sentra Mood API berhasil jalan di port ${PORT}`);
+app.listen(5000, () => {
+  console.log("Server jalan di 5000 🔥");
 });
