@@ -1,16 +1,19 @@
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
+const cors = require('cors'); // Cukup satu aja Bang
 
 const authRoutes = require('./routes/authRoutes');
 const moodRoutes = require('./routes/moodRoutes');
 
 const app = express();
 
+// Konfigurasi CORS
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:5173'],
+  // Izinkan React (5173) tembus ke Node.js
+  origin: ['http://localhost:5173', 'http://localhost:3000'], 
   credentials: true
 }));
+
 app.use(express.json());
 
 app.get('/', (req, res) => {
@@ -20,7 +23,7 @@ app.get('/', (req, res) => {
   });
 });
 
-// gunain routes
+// Gunakan routes
 app.use('/api/auth', authRoutes);
 app.use('/api/moods', moodRoutes);
 
@@ -32,8 +35,8 @@ app.use((req, res) => {
   });
 });
 
-// start server
-const PORT = process.env.PORT || 3000;
+// Start server - Pakai backtick buat template literal
+const PORT = process.env.PORT || 5000; 
 app.listen(PORT, () => {
-  console.log(`Sentra Mood API berhasil jalan di port ${PORT}`);
+  console.log("Sentra Mood API berhasil jalan di port ${PORT}");
 });
