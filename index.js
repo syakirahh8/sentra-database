@@ -7,32 +7,25 @@ const moodRoutes = require('./routes/moodRoutes');
 
 const app = express();
 
-// 1. MIDDLEWARE WAJIB (Biar bisa baca data JSON dari Frontend)
-app.use(express.json());
-
-// 2. KONFIGURASI CORS (Global)
+// 🔥 1. CORS DULU (BIAR PREFLIGHT GA DIBLOCK)
 app.use(cors({
-  origin: [
-    'http://localhost:5173', 
-    'http://127.0.0.1:5173', 
-    'http://localhost:3000'
-  ], 
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  origin: true, // sementara bebasin dulu biar ga ribet
+  credentials: true
 }));
 
-/** * CATATAN: 
- * Baris app.options('*') atau app.options('.*') DIHAPUS 
- * karena sudah otomatis ditangani oleh app.use(cors()) di atas.
- * Ini untuk menghindari error PathError pada Node.js versi terbaru.
- */
+// 🔥 2. JSON PARSER
+app.use(express.json());
 
-// 3. ROUTES
+// 🔥 3. ROUTES
 app.use('/api/auth', authRoutes);
 app.use('/api/moods', moodRoutes);
 
-// 4. 404 NOT FOUND
+// 🔥 4. TEST ENDPOINT (BIAR LO TAU SERVER HIDUP)
+app.get('/', (req, res) => {
+  res.send('API jalan 🔥');
+});
+
+// 🔥 5. 404
 app.use((req, res) => {
   res.status(404).json({ 
     status: 'error', 
@@ -40,9 +33,8 @@ app.use((req, res) => {
   });
 });
 
-// 5. START SERVER
+// 🔥 6. START SERVER
 const PORT = process.env.PORT || 5000; 
 app.listen(PORT, () => {
-  // Menggunakan Backtick (tombol sebelah angka 1) untuk template literal
   console.log(`Sentra Mood API berhasil jalan di port ${PORT}`);
 });
