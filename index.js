@@ -21,7 +21,7 @@ app.use(cors({
 }));
 
 // Tambahin ini juga di bawahnya buat nge-handle Preflight request dari browser
-app.options('*', cors());
+app.options('.*', cors());
 
 // Gunakan routes
 app.use('/api/auth', authRoutes);
@@ -38,5 +38,6 @@ app.use((req, res) => {
 // Start server - Pakai backtick buat template literal
 const PORT = process.env.PORT || 5000; 
 app.listen(PORT, () => {
-  console.log("Sentra Mood API berhasil jalan di port ${PORT}");
+  // Pakai tombol di sebelah angka 1 (backtick)
+  console.log(`Sentra Mood API berhasil jalan di port ${PORT}`);
 });
