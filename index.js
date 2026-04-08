@@ -1,15 +1,17 @@
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors'); // Cukup satu aja Bang
+const cors = require('cors');
 
 const authRoutes = require('./routes/authRoutes');
 const moodRoutes = require('./routes/moodRoutes');
 
 const app = express();
 
-// Konfigurasi CORS
+// 1. MIDDLEWARE WAJIB (Biar bisa baca data JSON dari Frontend)
+app.use(express.json());
+
+// 2. KONFIGURASI CORS (Global)
 app.use(cors({
-  // Tambahin 127.0.0.1 buat jaga-jaga kalau Vite lu lari ke situ
   origin: [
     'http://localhost:5173', 
     'http://127.0.0.1:5173', 
@@ -20,14 +22,17 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Tambahin ini juga di bawahnya buat nge-handle Preflight request dari browser
-app.options('.*', cors());
+/** * CATATAN: 
+ * Baris app.options('*') atau app.options('.*') DIHAPUS 
+ * karena sudah otomatis ditangani oleh app.use(cors()) di atas.
+ * Ini untuk menghindari error PathError pada Node.js versi terbaru.
+ */
 
-// Gunakan routes
+// 3. ROUTES
 app.use('/api/auth', authRoutes);
 app.use('/api/moods', moodRoutes);
 
-// 404 not found
+// 4. 404 NOT FOUND
 app.use((req, res) => {
   res.status(404).json({ 
     status: 'error', 
@@ -35,9 +40,9 @@ app.use((req, res) => {
   });
 });
 
-// Start server - Pakai backtick buat template literal
+// 5. START SERVER
 const PORT = process.env.PORT || 5000; 
 app.listen(PORT, () => {
-  // Pakai tombol di sebelah angka 1 (backtick)
+  // Menggunakan Backtick (tombol sebelah angka 1) untuk template literal
   console.log(`Sentra Mood API berhasil jalan di port ${PORT}`);
 });
