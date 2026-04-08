@@ -1,8 +1,8 @@
 const supabase = require('../config/supabaseClient');
 
-// 1. CREATE: Simpan Mood Baru + Anti Double Submit Hari Ini
+// simpan mood baru
 const saveMood = async (req, res) => {
-  // 1. Cek Login (Pintu Utama)
+  // cek login
   if (!req.user) {
     return res.status(401).json({ 
       status: 'error',
@@ -13,7 +13,7 @@ const saveMood = async (req, res) => {
   const { mood_level, note } = req.body;
   const userId = req.user.id;
 
-  // 2. Validasi: Pastikan mood_level sesuai pilihan (1-5)
+  // Validasi: buat mastiin mood_level sesuai sm pilihan
   // 1: Sad, 2: Stress, 3: Okay, 4: Good, 5: Great
   if (!mood_level || mood_level < 1 || mood_level > 5) {
     return res.status(400).json({ 
@@ -23,7 +23,7 @@ const saveMood = async (req, res) => {
   }
 
   try {
-    // 3. Cek apakah sudah submit hari ini (Biar nggak double)
+    // Cek apakah sudah submit hari ini (Biar nggak double)
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
@@ -52,8 +52,8 @@ const saveMood = async (req, res) => {
     const { data, error } = await supabase
       .from('moods')
       .insert([{ 
-        mood_level: Number(mood_level), // Pastikan masuk sebagai angka
-        note: note || "",               // Kalau note kosong, kasih string kosong aja
+        mood_level: Number(mood_level),
+        note: note || "",
         user_id: userId 
       }])
       .select();

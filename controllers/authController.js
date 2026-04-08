@@ -1,6 +1,6 @@
 const supabase = require('../config/supabaseClient');
 
-// --- REGISTER ---
+// REGISTER
 const register = async (req, res) => {
   const { email, password, full_name } = req.body;
 
@@ -41,7 +41,7 @@ const register = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error); // tambahan biar kamu bisa liat error di terminal
+    console.error(error);
     res.status(500).json({
       status: 'error',
       message: 'Terjadi kesalahan pada server'
@@ -49,7 +49,7 @@ const register = async (req, res) => {
   }
 };
 
-// --- LOGIN ---
+// LOGIN
 const login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -99,7 +99,6 @@ const login = async (req, res) => {
 
 const logout = async (req, res) => {
   try {
-    // Meminta Supabase untuk mematikan sesi user ini secara global
     const { error } = await supabase.auth.signOut();
 
     if (error) throw error;

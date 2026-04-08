@@ -3,7 +3,6 @@ const router = express.Router();
 const moodController = require('../controllers/moodController');
 const authenticateToken = require('../middleware/authMiddleware');
 
-// Semua route mood butuh autentikasi (kecuali kalau ada yang public)
 router.get('/stats', authenticateToken, moodController.getMoodStats);
 router.get('/calendar', authenticateToken, moodController.getCalendarMoods);
 router.post('/', authenticateToken, moodController.saveMood);

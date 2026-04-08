@@ -4,7 +4,6 @@ const authenticateToken = async (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
-  // Kalau tidak ada token
   if (!token) {
     return res.status(401).json({ 
       status: 'error', 
@@ -13,7 +12,7 @@ const authenticateToken = async (req, res, next) => {
   }
 
   try {
-    // Verifikasi token ke Supabase
+    // verif token
     const { data: { user }, error } = await supabase.auth.getUser(token);
 
     if (error || !user) {
@@ -23,12 +22,12 @@ const authenticateToken = async (req, res, next) => {
       });
     }
 
-    // Simpan user ke request biar bisa dipakai di moodController
+    // simpan user ke moodcontroller
     req.user = user;
-    next();   // Lanjut ke controller
+    next();
 
   } catch (err) {
-    console.error(err); // Biar kamu bisa liat error di terminal
+    console.error(err);
     res.status(500).json({ 
       status: 'error', 
       message: 'Terjadi kesalahan pada server' 

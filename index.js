@@ -2,20 +2,17 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 
-// Import Routes
 const authRoutes = require('./routes/authRoutes');
 const moodRoutes = require('./routes/moodRoutes');
 
 const app = express();
 
-// --- Global Middleware ---
 app.use(cors({
   origin: ['http://localhost:3000', 'http://localhost:5173'],
   credentials: true
 }));
 app.use(express.json());
 
-// --- Health Check ---
 app.get('/', (req, res) => {
   res.status(200).json({ 
     status: 'success', 
@@ -23,11 +20,11 @@ app.get('/', (req, res) => {
   });
 });
 
-// --- Gunakan Routes ---
-app.use('/api/auth', authRoutes);     // semua auth jadi /api/auth/...
-app.use('/api/moods', moodRoutes);    // semua mood jadi /api/moods/...
+// gunain routes
+app.use('/api/auth', authRoutes);
+app.use('/api/moods', moodRoutes);
 
-// --- 404 Not Found ---
+// 404 not found
 app.use((req, res) => {
   res.status(404).json({ 
     status: 'error', 
@@ -35,7 +32,7 @@ app.use((req, res) => {
   });
 });
 
-// --- Start Server ---
+// start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Sentra Mood API berhasil jalan di port ${PORT}`);
