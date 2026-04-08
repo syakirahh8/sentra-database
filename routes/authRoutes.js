@@ -2,14 +2,16 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 
-// Route Auth
+// --- Route Autentikasi ---
+
+// 1. Pendaftaran User Baru
 router.post('/register', authController.register);
+
+// 2. Login (Dapetin Token)
 router.post('/login', authController.login);
-router.post('/logout', (req, res) => {
-  res.status(200).json({ 
-    status: 'success', 
-    message: 'Logged out successfully.' 
-  });
-});
+
+// 3. Logout (Matiin Sesi di Supabase)
+// Kita ganti (req, res) tadi dengan memanggil fungsi dari controller
+router.post('/logout', authController.logout);
 
 module.exports = router;

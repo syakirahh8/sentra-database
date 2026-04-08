@@ -2,28 +2,33 @@ const supabase = require('../config/supabaseClient');
 
 // 1. CREATE: Simpan Mood Baru + Anti Double Submit Hari Ini
 const saveMood = async (req, res) => {
+  // 1. Cek Login (Pintu Utama)
   if (!req.user) {
     return res.status(401).json({ 
-      message: "Unauthorized: Heyy login dulu yh!" 
+      status: 'error',
+      message: "Akses ditolak. Login dulu yuk!" 
     });
   }
 
   const { mood_level, note } = req.body;
   const userId = req.user.id;
 
-  if (!mood_level) {
+  // 2. Validasi: Pastikan mood_level sesuai pilihan (1-5)
+  // 1: Sad, 2: Stress, 3: Okay, 4: Good, 5: Great
+  if (!mood_level || mood_level < 1 || mood_level > 5) {
     return res.status(400).json({ 
-      message: "Mood level wajib diisi!" 
+      status: 'error',
+      message: "Pilih salah satu mood yang tersedia ya (1-5)!" 
     });
   }
 
   try {
-    // === CEK APAKAH SUDAH SUBMIT HARI INI ===
+    // 3. Cek apakah sudah submit hari ini (Biar nggak double)
     const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);        // Mulai hari ini jam 00:00
+    todayStart.setHours(0, 0, 0, 0);
 
     const todayEnd = new Date(todayStart);
-    todayEnd.setDate(todayEnd.getDate() + 1); // Besok jam 00:00
+    todayEnd.setDate(todayEnd.getDate() + 1);
 
     const { data: existingMood, error: checkError } = await supabase
       .from('moods')
@@ -33,66 +38,41 @@ const saveMood = async (req, res) => {
       .lt('created_at', todayEnd.toISOString())
       .limit(1);
 
-    if (checkError) {
-      console.error(checkError);
-      return res.status(500).json({ 
-        message: "Terjadi kesalahan saat memeriksa mood hari ini" 
-      });
-    }
+    if (checkError) throw checkError;
 
-    // Kalau sudah ada mood hari ini
     if (existingMood && existingMood.length > 0) {
       return res.status(400).json({
-        message: "Kamu sudah submit mood hari ini! Besok lagi ya 😊",
+        status: 'error',
+        message: "Kamu sudah mencatat mood hari ini. Sampai jumpa besok! 😊",
         alreadySubmitted: true
       });
     }
 
-    // === Simpan mood baru ===
+    // 4. Simpan ke Database
     const { data, error } = await supabase
       .from('moods')
       .insert([{ 
-        mood_level, 
-        note, 
+        mood_level: Number(mood_level), // Pastikan masuk sebagai angka
+        note: note || "",               // Kalau note kosong, kasih string kosong aja
         user_id: userId 
       }])
       .select();
 
-    if (error) {
-      return res.status(400).json({ 
-        message: "Gagal simpan mood kamu", 
-        error: error.message 
-      });
-    }
+    if (error) throw error;
 
     res.status(201).json({
-      message: "Mood udh disimpan!! Semangat idup yh!",
+      status: 'success',
+      message: "Mood kamu sudah tersimpan! Semangat ya hari ini!",
       data: data[0]
     });
 
   } catch (error) {
-    console.error(error);
+    console.error("Error di saveMood:", error.message);
     res.status(500).json({
-      message: "Terjadi kesalahan pada server"
+      status: 'error',
+      message: "Waduh, ada kendala di server. Coba lagi nanti ya!"
     });
   }
-};
-
-// 2. READ: Ambil Mood milik user login
-const getUserMoods = async (req, res) => {
-  if (!req.user) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
-  const { data, error } = await supabase
-    .from('moods')
-    .select('*')
-    .eq('user_id', req.user.id)
-    .order('created_at', { ascending: false });
-
-  if (error) return res.status(400).json({ error: error.message });
-
-  res.status(200).json(data);
 };
 
 // 3. UPDATE: Edit Mood
@@ -157,16 +137,30 @@ const deleteMood = async (req, res) => {
   });
 };
 
-// 5. STATS: Data untuk Bar Chart
 const getMoodStats = async (req, res) => {
   if (!req.user) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
+  const user = req.user;
+
+  // ambil bulan & tahun sekarang
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth(); // 0-11
+
+  // awal bulan
+  const startOfMonth = new Date(year, month, 1);
+
+  // akhir bulan (otomatis handle 28/30/31)
+  const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59);
+
   const { data, error } = await supabase
     .from('moods')
     .select('mood_level')
-    .eq('user_id', req.user.id);
+    .eq('user_id', user.id)
+    .gte('created_at', startOfMonth.toISOString())
+    .lte('created_at', endOfMonth.toISOString());
 
   if (error) return res.status(400).json({ error: error.message });
 
@@ -177,11 +171,47 @@ const getMoodStats = async (req, res) => {
 
   res.status(200).json(stats);
 };
+// 6. CALENDAR
+const getCalendarMoods = async (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
 
+  const user = req.user;
+
+  const { data, error } = await supabase
+    .from('moods')
+    .select('id, mood_level, note, created_at')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: true }); // biar rapi
+
+  if (error) {
+    return res.status(400).json({ error: error.message });
+  }
+
+  const result = {};
+
+  data.forEach(item => {
+    const localDate = new Date(item.created_at);
+
+    const year = localDate.getFullYear();
+    const month = String(localDate.getMonth() + 1).padStart(2, '0');
+    const day = String(localDate.getDate()).padStart(2, '0');
+
+    const date = `${year}-${month}-${day}`;
+
+    result[date] = {
+      mood_level: item.mood_level,
+      note: item.note
+    };
+  });
+
+  res.status(200).json(result);
+};
 module.exports = {
   saveMood,
-  getUserMoods,
   getMoodStats,
   updateMood,
   deleteMood,
+  getCalendarMoods
 };

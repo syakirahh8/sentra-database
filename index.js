@@ -19,7 +19,7 @@ app.use(express.json());
 app.get('/', (req, res) => {
   res.status(200).json({ 
     status: 'success', 
-    message: 'Sentra Mood API is active and running ✅' 
+    message: 'Sentra Mood API is active and running' 
   });
 });
 
@@ -38,5 +38,5 @@ app.use((req, res) => {
 // --- Start Server ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`✅ Sentra Mood API berhasil jalan di port ${PORT}`);
+  console.log(`Sentra Mood API berhasil jalan di port ${PORT}`);
 });

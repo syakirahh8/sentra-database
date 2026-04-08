@@ -97,4 +97,28 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { register, login };
+const logout = async (req, res) => {
+  try {
+    // Meminta Supabase untuk mematikan sesi user ini secara global
+    const { error } = await supabase.auth.signOut();
+
+    if (error) throw error;
+
+    res.status(200).json({
+      status: 'success',
+      message: "Berhasil logout. Sampai jumpa lagi!"
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: "Gagal logout, coba lagi ya!",
+      error: error.message
+    });
+  }
+};
+
+module.exports = { 
+  register,
+  login,
+  logout
+};
