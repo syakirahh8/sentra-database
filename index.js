@@ -10,7 +10,7 @@ const app = express();
 // Konfigurasi CORS
 app.use(cors({
   // Izinkan React (5173) tembus ke Node.js
-  origin: ['http://localhost:5173', 'http://localhost:3000'], 
+  origin: ['http://localhost:5173', 'http://localhost:5000'], 
   credentials: true
 }));
 
