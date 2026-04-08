@@ -2,31 +2,34 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 
-const authRoutes = require('./routes/authRoutes');
-const moodRoutes = require('./routes/moodRoutes');
-
 const app = express();
 
+// 🔥 CORS SUPER TERBUKA
 app.use(cors());
-
 app.use(express.json());
 
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "*");
-  res.header("Access-Control-Allow-Methods", "*");
-
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
-
-  next();
+// 🔥 TEST ROUTE (WAJIB ADA)
+app.post('/test', (req, res) => {
+  console.log("KENA HIT 🔥");
+  res.json({ success: true });
 });
 
-// ROUTES
-app.use('/api/auth', authRoutes);
-app.use('/api/moods', moodRoutes);
+// 🔥 TEST MOODS (PASTI JALAN)
+app.post('/api/moods', (req, res) => {
+  console.log("BODY:", req.body);
+  res.json({
+    status: "success",
+    data: req.body
+  });
+});
+
+// 🔥 TEST CALENDAR
+app.get('/api/moods/calendar', (req, res) => {
+  res.json({
+    "2026-03-17": { mood_level: 5, note: "test" }
+  });
+});
 
 app.listen(5000, () => {
-  console.log("Server jalan di 5000");
+  console.log("SERVER HIDUP DI 5000 🔥");
 });
