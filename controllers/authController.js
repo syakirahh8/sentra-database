@@ -73,7 +73,6 @@ const login = async (req, res) => {
       });
     }
 
-    // Cek apakah email sudah dikonfirmasi
     if (!data.user.email_confirmed_at) {
       return res.status(403).json({
         status: 'error',

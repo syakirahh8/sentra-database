@@ -1,8 +1,6 @@
 const supabase = require('../config/supabaseClient');
 
-// simpan mood baru
 const saveMood = async (req, res) => {
-  // cek login
   if (!req.user) {
     return res.status(401).json({ 
       status: 'error',
@@ -13,8 +11,6 @@ const saveMood = async (req, res) => {
   const { mood_level, note } = req.body;
   const userId = req.user.id;
 
-  // Validasi: buat mastiin mood_level sesuai sm pilihan
-  // 1: Sad, 2: Stress, 3: Okay, 4: Good, 5: Great
   if (!mood_level || mood_level < 1 || mood_level > 5) {
     return res.status(400).json({ 
       status: 'error',
@@ -23,7 +19,6 @@ const saveMood = async (req, res) => {
   }
 
   try {
-    // Cek apakah sudah submit hari ini (Biar nggak double)
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 

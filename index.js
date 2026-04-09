@@ -1,31 +1,27 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const moodRoutes = require('./routes/moodRoutes');
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 
-app.use(cors());
+// 1. CONFIG CORS (Izin untuk Frontend)
+app.use(cors({
+  origin: 'http://localhost:5173', // Pastikan port ini sesuai dengan Vite kamu
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+
+// 2. MIDDLEWARE
 app.use(express.json());
 
-app.post('/test', (req, res) => {
-  console.log("KENA HIT 🔥");
-  res.json({ success: true });
-});
+// 3. ROUTES
+app.use('/api/auth', authRoutes);
+app.use('/api/moods', moodRoutes);
 
-app.post('/api/moods', (req, res) => {
-  console.log("BODY:", req.body);
-  res.json({
-    status: "success",
-    data: req.body
-  });
-});
-
-app.get('/api/moods/calendar', (req, res) => {
-  res.json({
-    "2026-03-17": { mood_level: 5, note: "test" }
-  });
-});
-
-app.listen(5000, () => {
-  console.log("SERVER HIDUP DI 5000 🔥");
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
