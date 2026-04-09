@@ -4,17 +4,14 @@ const cors = require('cors');
 
 const app = express();
 
-// 🔥 CORS SUPER TERBUKA
 app.use(cors());
 app.use(express.json());
 
-// 🔥 TEST ROUTE (WAJIB ADA)
 app.post('/test', (req, res) => {
   console.log("KENA HIT 🔥");
   res.json({ success: true });
 });
 
-// 🔥 TEST MOODS (PASTI JALAN)
 app.post('/api/moods', (req, res) => {
   console.log("BODY:", req.body);
   res.json({
@@ -23,7 +20,6 @@ app.post('/api/moods', (req, res) => {
   });
 });
 
-// 🔥 TEST CALENDAR
 app.get('/api/moods/calendar', (req, res) => {
   res.json({
     "2026-03-17": { mood_level: 5, note: "test" }
