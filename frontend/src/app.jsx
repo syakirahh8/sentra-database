@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
+import { Routes, Route, Navigate } from "react-router-dom"; 
 import { supabase } from "./supabaseClient";
+
+import Home from "./home";
 import Login from "./login";
 import Dashboard from "./dashboard";
 
@@ -8,13 +11,11 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Ambil sesi login saat ini
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
     });
 
-    // Pantau perubahan status auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
@@ -32,7 +33,18 @@ function App() {
 
   return (
     <div className="App">
-      {!session ? <Login /> : <Dashboard session={session} />}
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route 
+          path="/login" 
+          element={!session ? <Login /> : <Navigate to="/dashboard" replace />} 
+        />
+        <Route 
+          path="/dashboard" 
+          element={session ? <Dashboard session={session} /> : <Navigate to="/home" replace />} 
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </div>
   );
 }

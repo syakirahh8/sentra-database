@@ -6,9 +6,8 @@ const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 
-// 1. CONFIG CORS (Izin untuk Frontend)
 app.use(cors({
-  origin: 'http://localhost:5173', // Pastikan port ini sesuai dengan Vite kamu
+  origin: 'http://localhost:5173',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
