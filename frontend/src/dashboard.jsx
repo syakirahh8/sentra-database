@@ -1,27 +1,36 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "./supabaseClient";
 
+import greatImg from "./assets/mood_options_image/05-img.png";
+import goodImg from "./assets/mood_options_image/04-img.png";
+import okayImg from "./assets/mood_options_image/03-img.png";
+import sadImg from "./assets/mood_options_image/02-img.png";
+import stressImg from "./assets/mood_options_image/01-img.png";
+
+import greatCal from "./assets/mood_calendar_image/great-img.png";
+import goodCal from "./assets/mood_calendar_image/good-img.png";
+import okayCal from "./assets/mood_calendar_image/okay-img.png";
+import sadCal from "./assets/mood_calendar_image/sad-img.png";
+import stressCal from "./assets/mood_calendar_image/stress-img.png";
+
 function Dashboard({ session }) {
   const [selectedMood, setSelectedMood] = useState(null);
   const [journalText, setJournalText] = useState("");
   const [loading, setLoading] = useState(true);
   const [monthlyMoods, setMonthlyMoods] = useState({});
 
-  // currentDate: Untuk navigasi bulan (bisa maju/mundur)
-  // today: Patokan hari ini yang asli (Real-time)
   const [currentDate, setCurrentDate] = useState(new Date());
   const today = new Date();
-
-  // Tanggal yang sedang aktif diklik di kalender
   const [viewingDate, setViewingDate] = useState(today.getDate());
 
   const moodOptions = [
-    { name: "Great", emoji: "😆", color: "#E1F5FE", level: 5 },
-    { name: "Good", emoji: "🙂", color: "#E0F2F1", level: 4 },
-    { name: "Okay", emoji: "😐", color: "#FFF8E1", level: 3 },
-    { name: "Bad", emoji: "😞", color: "#FFF3E0", level: 2 },
-    { name: "Awful", emoji: "😡", color: "#FFEBEE", level: 1 },
+    { name: "Great", image: greatImg, calendarImage: greatCal, color: "#E1F5FE", level: 5 },
+    { name: "Good", image: goodImg, calendarImage: goodCal, color: "#E0F2F1", level: 4 },
+    { name: "Okay", image: okayImg, calendarImage: okayCal, color: "#FFF8E1", level: 3 },
+    { name: "Bad", image: sadImg, calendarImage: sadCal, color: "#FFF3E0", level: 2 },
+    { name: "Awful", image: stressImg, calendarImage: stressCal, color: "#FFEBEE", level: 1 },
   ];
+
   const fetchMoodData = async () => {
     try {
       setLoading(true);
@@ -68,7 +77,6 @@ function Dashboard({ session }) {
     if (!day) return;
     setViewingDate(day);
     const existingData = monthlyMoods[day];
-
     if (existingData) {
       setSelectedMood(moodOptions.find(m => m.level === existingData.mood_level));
       setJournalText(existingData.note);
@@ -90,7 +98,6 @@ function Dashboard({ session }) {
 
     try {
       const submissionDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), viewingDate);
-
       const { error } = await supabase.from("moods").insert([{
         user_id: session.user.id,
         mood_level: selectedMood.level,
@@ -111,7 +118,6 @@ function Dashboard({ session }) {
     const month = currentDate.getMonth();
     const firstDayIndex = new Date(year, month, 1).getDay();
     const lastDate = new Date(year, month + 1, 0).getDate();
-
     const days = Array(firstDayIndex).fill(null);
     for (let i = 1; i <= lastDate; i++) days.push(i);
     return days;
@@ -126,25 +132,23 @@ function Dashboard({ session }) {
     <div className="container-fluid py-4" style={{ background: "#F4F7F6", minHeight: "100vh" }}>
       <div className="container">
 
-        {/* Header */}
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h2 className="fw-bold">Sentra</h2>
-          <div>
-            <button className="btn btn-light rounded-pill shadow-sm border px-4">
+          <h2 className="fw-bold text-info">Sentra Mood</h2>
+          <div className="d-flex gap-2">
+            <div className="btn btn-light rounded-pill shadow-sm border px-4 py-2">
               Hi, {session.user.email.split('@')[0]}
-            </button>
-            <button className="text-danger ms-2 btn btn-light rounded-pill shadow-sm border px-4" onClick={() => supabase.auth.signOut()}>
+            </div>
+            <button className="btn btn-white text-danger rounded-pill shadow-sm border px-4" onClick={() => supabase.auth.signOut()}>
               Logout
             </button>
           </div>
         </div>
 
         <div className="row">
-
-          {/* SISI KIRI: Form Mood & Review */}
+          {/* SISI KIRI: Form Input */}
           <div className="col-lg-5 mb-4">
             <div className="card border-0 shadow-sm p-4" style={{ borderRadius: "20px" }}>
-              <div className="d-flex justify-content-between align-items-center mb-3">
+              <div className="d-flex justify-content-between align-items-center mb-4">
                 <h5 className="fw-bold mb-0">
                   {viewingDate} {currentDate.toLocaleDateString('en-US', { month: 'long' })}
                 </h5>
@@ -152,8 +156,20 @@ function Dashboard({ session }) {
               </div>
 
               <form onSubmit={handleSubmit}>
-                <label className="text-muted mb-3">How are you feeling?</label>
-                <div className="d-flex justify-content-between mb-4">
+                <label className="text-muted small mb-3">How are you feeling?</label>
+                
+                {/* Scroll Horizontal Container dengan ukuran lebih besar */}
+                <div 
+                  className="d-flex gap-3 pb-3 mb-4" 
+                  style={{ 
+                    overflowX: "auto", 
+                    scrollbarWidth: "none", 
+                    msOverflowStyle: "none",
+                    WebkitOverflowScrolling: "touch"
+                  }}
+                >
+                  <style>{`div::-webkit-scrollbar { display: none; }`}</style>
+                  
                   {moodOptions.map((m) => {
                     const isSelected = selectedMood?.level === m.level;
                     return (
@@ -161,22 +177,38 @@ function Dashboard({ session }) {
                         key={m.name}
                         onClick={() => !isReadOnly && !isFuture && setSelectedMood(m)}
                         style={{
-                          padding: "12px", borderRadius: "15px", textAlign: "center", width: "85px",
+                          padding: "0",
+                          borderRadius: "12px",
+                          textAlign: "center",
+                          minWidth: "150px", // Ukuran diperbesar dari 122px ke 150px
+                          height: "95px",   // Ukuran diperbesar dari 76px ke 95px
+                          flexShrink: 0,
                           cursor: (isReadOnly || isFuture) ? "default" : "pointer",
                           backgroundColor: isSelected ? m.color : "#fff",
-                          border: isSelected ? "2px solid #26C6DA" : "1px solid #eee",
+                          border: isSelected ? "3px solid #26C6DA" : "1px solid #eee",
                           opacity: (isReadOnly || isFuture) && !isSelected ? 0.3 : 1,
-                          transition: "0.3s"
+                          transition: "0.3s",
+                          overflow: "hidden",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center"
                         }}
                       >
-                        <small className="d-block text-muted" style={{ fontSize: "0.7rem" }}>{m.name}</small>
-                        <span style={{ fontSize: "1.8rem" }}>{m.emoji}</span>
+                        <img
+                          src={m.image}
+                          alt={m.name}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover"
+                          }}
+                        />
                       </div>
                     );
                   })}
                 </div>
 
-                <label className="text-muted mb-2">Journal</label>
+                <label className="text-muted small mb-2">Journal</label>
                 <textarea
                   className="form-control mb-4 border-0"
                   rows="5"
@@ -184,23 +216,21 @@ function Dashboard({ session }) {
                   value={journalText}
                   onChange={(e) => setJournalText(e.target.value)}
                   readOnly={isReadOnly || isFuture}
-                  placeholder={isFuture ? "No one knows what the future holds..." : "What's going on today?"}
+                  placeholder={isFuture ? "The future is still a mystery..." : "Write your story here..."}
                 ></textarea>
 
                 {!isReadOnly && !isFuture && (
-                  <button type="submit" className="btn btn-info w-100 py-3 text-white fw-bold" style={{ borderRadius: "12px" }}>
-                    Simpan Mood
+                  <button type="submit" className="btn btn-info w-100 py-3 text-white fw-bold shadow-sm" style={{ borderRadius: "12px" }}>
+                    Submit Mood
                   </button>
                 )}
               </form>
             </div>
           </div>
 
-          {/* SISI KANAN: Kalender Interaktif */}
+          {/* SISI KANAN: Kalender */}
           <div className="col-lg-7">
             <div className="card border-0 shadow-sm p-4" style={{ borderRadius: "20px" }}>
-
-              {/* Navigasi Bulan */}
               <div className="d-flex justify-content-between align-items-center mb-4">
                 <button className="btn btn-sm btn-outline-info border-0" onClick={() => changeMonth(-1)}>❮</button>
                 <h5 className="fw-bold mb-0">
@@ -209,18 +239,14 @@ function Dashboard({ session }) {
                 <button className="btn btn-sm btn-outline-info border-0" onClick={() => changeMonth(1)}>❯</button>
               </div>
 
-              {/* Nama Hari */}
               <div className="row text-center mb-2 fw-bold text-muted" style={{ fontSize: "0.8rem" }}>
                 {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => <div key={d} className="col">{d}</div>)}
               </div>
 
-              {/* Grid Tanggal */}
-              <div className="row g-1">
+              <div className="row g-2">
                 {getCalendarDays().map((day, i) => {
                   const dayMood = monthlyMoods[day];
                   const moodInfo = dayMood ? moodOptions.find(m => m.level === dayMood.mood_level) : null;
-
-                  // Deteksi apakah ini hari ini (Real-time)
                   const isRealToday = day === today.getDate() &&
                     currentDate.getMonth() === today.getMonth() &&
                     currentDate.getFullYear() === today.getFullYear();
@@ -230,27 +256,31 @@ function Dashboard({ session }) {
                       <div
                         onClick={() => handleDateClick(day)}
                         style={{
-                          paddingTop: "100%", position: "relative", borderRadius: "10px",
+                          paddingTop: "100%", position: "relative", borderRadius: "12px",
                           border: viewingDate === day ? "2px solid #26C6DA" : "1px solid #f0f0f0",
                           backgroundColor: isRealToday ? "#FFD600" : (day ? "#fff" : "transparent"),
                           cursor: day ? "pointer" : "default",
-                          transition: "0.2s"
+                          transition: "0.2s",
+                          overflow: "hidden"
                         }}
                       >
                         {day && (
                           <>
-                            <span style={{
-                              position: "absolute", top: "5px", left: "8px",
-                              fontSize: "0.75rem", fontWeight: isRealToday ? "bold" : "normal"
-                            }}>
+                            <span style={{ position: "absolute", top: "8px", left: "10px", fontSize: "0.8rem", zIndex: 2 }}>
                               {day}
                             </span>
+
                             {moodInfo && (
                               <div style={{
-                                position: "absolute", top: 0, left: 0, width: "100%", height: "100%",
-                                display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.3rem"
+                                position: "absolute",
+                                bottom: "-5px",
+                                right: "-5px",
+                                width: "65px",
+                                height: "65px",
+                                zIndex: 1,
+                                pointerEvents: "none"
                               }}>
-                                {moodInfo.emoji}
+                                <img src={moodInfo.calendarImage} alt="mood" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
                               </div>
                             )}
                           </>
