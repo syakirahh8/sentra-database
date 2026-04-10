@@ -1,101 +1,65 @@
-import React, { useState } from 'react';
-import { supabase } from './supabaseClient';
+import React, { useState } from "react";
+import { supabase } from "./supabaseClient";
 
-export default function Login({ setView }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-
+    
     try {
-      // 1. Cek ke backend Node.js kamu
-      const res = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
-      
-      const data = await res.json();
 
-      if (!res.ok) {
-        throw new Error(data.message || 'Gagal login');
-      }
-
-      // 2. Set session di Supabase frontend agar user terekam masuk
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-
-      alert("Login Berhasil!");
-      // window.location.reload() akan memicu App.jsx untuk render Dashboard
-      window.location.reload(); 
-
-    } catch (err) {
-      alert("Error: " + err.message);
+      alert("Login berhasil!");
+    } catch (error) {
+      alert("Login gagal: " + error.message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="container-fluid vh-100">
-      <div className="row h-100">
-        {/* LEFT */}
-        <div className="col-md-6 d-flex align-items-center justify-content-center">
-          <form className="form-wrapper" onSubmit={handleLogin}>
-            <h2 className="title">Log in To Start</h2>
-
-            {/* Email */}
-            <label>Email</label>
-            <div className="input-box">
-              <i className="fa-regular fa-envelope"></i>
-              <input 
-                type="email" 
-                placeholder="Enter your email" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-
-            {/* Password */}
-            <label>Password</label>
-            <div className="input-box">
-              <i className="fa-solid fa-lock"></i>
-              <input 
-                type="password" 
-                placeholder="Enter your password" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="text-end mb-4">
-              <a href="#" className="text-decoration-none" style={{fontSize: '14px', color: '#6c757d'}}>Forgot Password?</a>
-            </div>
-
-            <button type="submit" className="btn-register w-100 border-0" disabled={loading}>
-              {loading ? 'Signing In...' : 'Sign In'}
-            </button>
-
-            <p className="login-text mt-5 text-center">
-              Not yet have an account?{' '}
-              <button type="button" onClick={() => setView('register')} className="login-link border-0 bg-transparent p-0">
-                Register
-              </button>
-            </p>
-          </form>
-        </div>
-
-        {/* RIGHT - IMAGE */}
-        <div className="col-md-6 p-0 d-none d-md-block">
-          {/* Pastikan Frame.png ada di folder 'public' */}
-          <img src="/Frame.png" className="right-img w-100 h-100" style={{objectFit: 'cover'}} alt="Login Frame" />
-        </div>
+    <div className="container d-flex justify-content-center align-items-center" style={{ height: "100vh" }}>
+      <div className="card p-4 shadow-sm" style={{ width: "350px", borderRadius: "15px" }}>
+        <h3 className="text-center mb-4 fw-bold">Log in To Start</h3>
+        <form onSubmit={handleLogin}>
+          <div className="mb-3">
+            <label className="form-label text-muted">Email</label>
+            <input 
+              type="email" 
+              className="form-control" 
+              value={email} 
+              onChange={(e) => setEmail(e.target.value)} 
+              required 
+            />
+          </div>
+          <div className="mb-4">
+            <label className="form-label text-muted">Password</label>
+            <input 
+              type="password" 
+              className="form-control" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              required 
+            />
+          </div>
+          <button type="submit" className="btn btn-light w-100 border py-2" disabled={loading}>
+            {loading ? "Signing In..." : "Sign In"}
+          </button>
+        </form>
+        <p className="text-center mt-3 text-muted" style={{ fontSize: "0.8rem" }}>
+          Not yet have an account? <span className="text-info" style={{ cursor: "pointer" }}>Register</span>
+        </p>
       </div>
     </div>
   );
 }
+
+export default Login;
