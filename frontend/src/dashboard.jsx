@@ -2,14 +2,21 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "./supabaseClient";
 
 function Dashboard({ session }) {
+  // --------------------------------------------------------
+  // 1. STATE MANAGEMENT
+  // --------------------------------------------------------
   const [selectedMood, setSelectedMood] = useState(null);
   const [journalText, setJournalText] = useState("");
-  const [today] = useState(new Date());
   const [loading, setLoading] = useState(true);
-  const [hasSubmitted, setHasSubmitted] = useState(false);
-  
-  // [TAMBAH] State untuk menyimpan semua mood bulan ini
   const [monthlyMoods, setMonthlyMoods] = useState({});
+  
+  // currentDate: Untuk navigasi bulan (bisa maju/mundur)
+  // today: Patokan hari ini yang asli (Real-time)
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const today = new Date();
+  
+  // Tanggal yang sedang aktif diklik di kalender
+  const [viewingDate, setViewingDate] = useState(today.getDate());
 
   const moodOptions = [
     { name: "Great", emoji: "😆", color: "#E1F5FE", level: 5 },
@@ -19,12 +26,15 @@ function Dashboard({ session }) {
     { name: "Awful", emoji: "😡", color: "#FFEBEE", level: 1 },
   ];
 
-  // [UBAH] Fungsi fetch data lebih lengkap
+  // --------------------------------------------------------
+  // 2. LOGIKA DATA (SUPABASE)
+  // --------------------------------------------------------
   const fetchMoodData = async () => {
     try {
       setLoading(true);
-      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-      const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59);
+      // Hitung awal dan akhir bulan dari currentDate
+      const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59);
 
       const { data, error } = await supabase
         .from("moods")
@@ -35,150 +45,225 @@ function Dashboard({ session }) {
 
       if (error) throw error;
 
-      // [TAMBAH] Mapping data ke objek biar gampang dicari: { "10": { mood_level: 5, note: "..." } }
+      // Map data ke objek: { tanggal: data_mood }
       const moodMap = {};
       data.forEach((item) => {
         const day = new Date(item.created_at).getDate();
         moodMap[day] = item;
-        
-        // Cek jika ada input untuk hari ini
-        if (day === today.getDate()) setHasSubmitted(true);
       });
 
       setMonthlyMoods(moodMap);
+
+      // Otomatis update form kiri berdasarkan viewingDate yang baru
+      const existingData = moodMap[viewingDate];
+      if (existingData) {
+        setSelectedMood(moodOptions.find(m => m.level === existingData.mood_level));
+        setJournalText(existingData.note);
+      } else {
+        setSelectedMood(null);
+        setJournalText("");
+      }
     } catch (err) {
-      console.error("Error:", err.message);
+      console.error("Fetch Error:", err.message);
     } finally {
       setLoading(false);
     }
   };
 
+  // Re-fetch data setiap kali pindah bulan
   useEffect(() => {
     fetchMoodData();
-  }, [session.user.id]);
+  }, [session.user.id, currentDate]);
 
-  // Logika Kalender (Tetap)
-  const year = today.getFullYear();
-  const month = today.getMonth();
-  const startDay = new Date(year, month, 1).getDay();
-
-  const getCalendarDays = () => {
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const days = [];
-    for (let i = 0; i < startDay; i++) days.push(null);
-    for (let i = 1; i <= daysInMonth; i++) days.push(i);
-    return days;
+  // --------------------------------------------------------
+  // 3. HANDLERS (KLIK & SUBMIT)
+  // --------------------------------------------------------
+  const handleDateClick = (day) => {
+    if (!day) return;
+    setViewingDate(day);
+    const existingData = monthlyMoods[day];
+    
+    if (existingData) {
+      setSelectedMood(moodOptions.find(m => m.level === existingData.mood_level));
+      setJournalText(existingData.note);
+    } else {
+      setSelectedMood(null);
+      setJournalText("");
+    }
   };
 
-  const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const changeMonth = (offset) => {
+    const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + offset, 1);
+    setCurrentDate(newDate);
+    // Reset view ke tanggal 1 setiap pindah bulan
+    setViewingDate(1);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (hasSubmitted || !selectedMood) return;
+    if (!selectedMood) return alert("Pilih mood dulu!");
 
     try {
+      // Simpan data berdasarkan tanggal yang dipilih di kalender
+      const submissionDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), viewingDate);
+      
       const { error } = await supabase.from("moods").insert([{
         user_id: session.user.id,
         mood_level: selectedMood.level,
         note: journalText,
-        created_at: new Date().toISOString()
+        created_at: submissionDate.toISOString()
       }]);
 
       if (error) throw error;
       alert("Mood berhasil disimpan!");
-      fetchMoodData(); // Refresh data kalender
-    } catch (error) {
-      alert(error.message);
+      fetchMoodData();
+    } catch (err) {
+      alert(err.message);
     }
   };
+
+  // --------------------------------------------------------
+  // 4. HELPER KALENDER
+  // --------------------------------------------------------
+  const getCalendarDays = () => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstDayIndex = new Date(year, month, 1).getDay();
+    const lastDate = new Date(year, month + 1, 0).getDate(); // Otomatis handle Feb (28/29)
+    
+    const days = Array(firstDayIndex).fill(null);
+    for (let i = 1; i <= lastDate; i++) days.push(i);
+    return days;
+  };
+
+  // Logika pengecekan status form
+  const isReadOnly = !!monthlyMoods[viewingDate];
+  const isFuture = new Date(currentDate.getFullYear(), currentDate.getMonth(), viewingDate) > today;
 
   if (loading) return <div className="vh-100 d-flex align-items-center justify-content-center">Loading...</div>;
 
   return (
     <div className="container-fluid py-4" style={{ background: "#F4F7F6", minHeight: "100vh" }}>
       <div className="container">
+        
+        {/* Header */}
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h2 className="fw-bold">Sentra Mood</h2>
-          <button className="btn btn-light rounded-pill border shadow-sm px-4" onClick={() => supabase.auth.signOut()}>
-             Hi, {session.user.email.split('@')[0]} <span className="text-danger ms-2">Logout</span>
+          <h2 className="fw-bold text-info">Sentra Mood</h2>
+          <button className="btn btn-light rounded-pill shadow-sm border px-4" onClick={() => supabase.auth.signOut()}>
+            Hi, {session.user.email.split('@')[0]} <span className="text-danger ms-2">Logout</span>
           </button>
         </div>
 
         <div className="row">
-          {/* Bagian Form (Kiri) - Tetap sama seperti sebelumnya */}
-          <div className="col-lg-6 mb-4">
+          
+          {/* SISI KIRI: Form Mood & Review */}
+          <div className="col-lg-5 mb-4">
             <div className="card border-0 shadow-sm p-4" style={{ borderRadius: "20px" }}>
-              {hasSubmitted ? (
-                <div className="text-center py-5">
-                  <h1 style={{ fontSize: "4rem" }}>🌟</h1>
-                  <h4 className="fw-bold mt-3">Mood Hari Ini Sudah Terisi!</h4>
-                  <p className="text-muted">Jurnal hari ini: "<i>{monthlyMoods[today.getDate()]?.note || "Tidak ada catatan"}</i>"</p>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit}>
-                  <label className="text-muted mb-3">What do you feel today?</label>
-                  <div className="d-flex justify-content-between mb-4">
-                    {moodOptions.map((m) => (
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h5 className="fw-bold mb-0">
+                  {viewingDate} {currentDate.toLocaleDateString('en-US', { month: 'long' })}
+                </h5>
+                {isReadOnly && <span className="badge bg-success rounded-pill">Recorded</span>}
+              </div>
+
+              <form onSubmit={handleSubmit}>
+                <label className="text-muted mb-3">Bagaimana perasaanmu?</label>
+                <div className="d-flex justify-content-between mb-4">
+                  {moodOptions.map((m) => {
+                    const isSelected = selectedMood?.level === m.level;
+                    return (
                       <div 
                         key={m.name}
-                        onClick={() => setSelectedMood(m)}
+                        onClick={() => !isReadOnly && !isFuture && setSelectedMood(m)}
                         style={{
-                          padding: "15px", borderRadius: "15px", textAlign: "center", cursor: "pointer", width: "100px",
-                          backgroundColor: selectedMood?.level === m.level ? m.color : "#fff",
-                          border: selectedMood?.level === m.level ? "2px solid #26C6DA" : "1px solid #eee"
+                          padding: "12px", borderRadius: "15px", textAlign: "center", width: "85px",
+                          cursor: (isReadOnly || isFuture) ? "default" : "pointer",
+                          backgroundColor: isSelected ? m.color : "#fff",
+                          border: isSelected ? "2px solid #26C6DA" : "1px solid #eee",
+                          opacity: (isReadOnly || isFuture) && !isSelected ? 0.3 : 1,
+                          transition: "0.3s"
                         }}
                       >
-                        <small className="d-block text-muted">{m.name}</small>
-                        <span style={{ fontSize: "2rem" }}>{m.emoji}</span>
+                        <small className="d-block text-muted" style={{ fontSize: "0.7rem" }}>{m.name}</small>
+                        <span style={{ fontSize: "1.8rem" }}>{m.emoji}</span>
                       </div>
-                    ))}
-                  </div>
-                  <textarea 
-                    className="form-control mb-4 border-0" 
-                    rows="5" 
-                    style={{ background: "#F1F3F4", borderRadius: "15px", padding: "15px" }}
-                    value={journalText}
-                    onChange={(e) => setJournalText(e.target.value)}
-                    placeholder="Tulis ceritamu..."
-                  ></textarea>
-                  <button type="submit" className="btn btn-info w-100 py-3 text-white fw-bold" style={{ borderRadius: "12px" }}>Submit Mood</button>
-                </form>
-              )}
+                    );
+                  })}
+                </div>
+
+                <label className="text-muted mb-2">Catatan Jurnal</label>
+                <textarea 
+                  className="form-control mb-4 border-0" 
+                  rows="5" 
+                  style={{ background: "#F1F3F4", borderRadius: "15px", padding: "15px" }}
+                  value={journalText}
+                  onChange={(e) => setJournalText(e.target.value)}
+                  readOnly={isReadOnly || isFuture}
+                  placeholder={isFuture ? "Masa depan masih misteri..." : "Apa yang terjadi hari ini?"}
+                ></textarea>
+
+                {!isReadOnly && !isFuture && (
+                  <button type="submit" className="btn btn-info w-100 py-3 text-white fw-bold" style={{ borderRadius: "12px" }}>
+                    Simpan Mood
+                  </button>
+                )}
+              </form>
             </div>
           </div>
 
-          {/* [UBAH] Bagian Kalender (Kanan) */}
-          <div className="col-lg-6">
+          {/* SISI KANAN: Kalender Interaktif */}
+          <div className="col-lg-7">
             <div className="card border-0 shadow-sm p-4" style={{ borderRadius: "20px" }}>
-              <h5 className="text-center fw-bold mb-4">{today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</h5>
-              <div className="row text-center mb-2 fw-bold text-muted" style={{ fontSize: "0.8rem" }}>
-                {weekdays.map(d => <div key={d} className="col">{d}</div>)}
+              
+              {/* Navigasi Bulan */}
+              <div className="d-flex justify-content-between align-items-center mb-4">
+                <button className="btn btn-sm btn-outline-info border-0" onClick={() => changeMonth(-1)}>❮</button>
+                <h5 className="fw-bold mb-0">
+                  {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                </h5>
+                <button className="btn btn-sm btn-outline-info border-0" onClick={() => changeMonth(1)}>❯</button>
               </div>
+
+              {/* Nama Hari */}
+              <div className="row text-center mb-2 fw-bold text-muted" style={{ fontSize: "0.8rem" }}>
+                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => <div key={d} className="col">{d}</div>)}
+              </div>
+
+              {/* Grid Tanggal */}
               <div className="row g-1">
                 {getCalendarDays().map((day, i) => {
-                  // [TAMBAH] Cek apakah ada mood di tanggal ini
                   const dayMood = monthlyMoods[day];
                   const moodInfo = dayMood ? moodOptions.find(m => m.level === dayMood.mood_level) : null;
+                  
+                  // Deteksi apakah ini hari ini (Real-time)
+                  const isRealToday = day === today.getDate() && 
+                                     currentDate.getMonth() === today.getMonth() && 
+                                     currentDate.getFullYear() === today.getFullYear();
 
                   return (
                     <div key={i} className="col" style={{ flex: "0 0 14.28%" }}>
                       <div 
-                        // [TAMBAH] Tooltip untuk melihat note saat kursor diarahkan ke tanggal
-                        title={dayMood?.note ? `Note: ${dayMood.note}` : ""}
+                        onClick={() => handleDateClick(day)}
                         style={{
-                          paddingTop: "100%", position: "relative", borderRadius: "8px", border: "1px solid #f8f8f8",
-                          backgroundColor: day === today.getDate() ? "#FFD600" : (day ? "#fff" : "transparent"),
-                          cursor: dayMood ? "help" : "default"
+                          paddingTop: "100%", position: "relative", borderRadius: "10px", 
+                          border: viewingDate === day ? "2px solid #26C6DA" : "1px solid #f0f0f0",
+                          backgroundColor: isRealToday ? "#FFD600" : (day ? "#fff" : "transparent"),
+                          cursor: day ? "pointer" : "default",
+                          transition: "0.2s"
                         }}
                       >
                         {day && (
                           <>
-                            <span style={{ position: "absolute", top: "2px", left: "5px", fontSize: "0.7rem", zIndex: 2 }}>{day}</span>
-                            {/* [TAMBAH] Tampilkan emoji mood jika ada */}
+                            <span style={{ 
+                              position: "absolute", top: "5px", left: "8px", 
+                              fontSize: "0.75rem", fontWeight: isRealToday ? "bold" : "normal" 
+                            }}>
+                              {day}
+                            </span>
                             {moodInfo && (
-                              <div style={{
-                                position: "absolute", top: "0", left: "0", width: "100%", height: "100%",
-                                display: "flex", alignItems: "center", justifyCenter: "center", fontSize: "1.2rem"
+                              <div style={{ 
+                                position: "absolute", top: 0, left: 0, width: "100%", height: "100%", 
+                                display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.3rem" 
                               }}>
                                 {moodInfo.emoji}
                               </div>
@@ -192,6 +277,7 @@ function Dashboard({ session }) {
               </div>
             </div>
           </div>
+
         </div>
       </div>
     </div>
