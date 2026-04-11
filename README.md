@@ -123,9 +123,9 @@ Sentra is built to help users:
 Developed by **CC26-PS052 Team**
 
 Members:
-1. CFS211D6Y056 – Ahmad Raffael Fauzan – Project Manager & UI Designer
-2. CFS211D6X071 – Nisrina Asad Alkatiri – UI Designer & Frontend Developer
-3. CFS211D6X074 – Azka Syakirah – Fullstack Developer
-4. CFS211D6X072 – Najla Nafisah – Fullstack Developer
-5. CFS211D6X116 – Fiorenza Kinanti Prashanda – Fullstack Developer
-6. CFS211D6X070 – Tanzani Akasyah – Frontend Developer
+1. CFS211D6Y056 – Ahmad Raffael Fauzan
+2. CFS211D6X071 – Nisrina Asad Alkatiri
+3. CFS211D6X074 – Azka Syakirah
+4. CFS211D6X072 – Najla Nafisah
+5. CFS211D6X116 – Fiorenza Kinanti Prashanda
+6. CFS211D6X070 – Tanzani Akasyah
