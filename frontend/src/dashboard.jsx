@@ -165,7 +165,7 @@ function Dashboard({ session }) {
     if (!selectedMood) {
       return Swal.fire({
         title: 'Oops',
-        text: 'Please select a mood before submitting.',
+        text: 'Please select a mood before submitting..',
         imageUrl: errorImg,
         imageWidth: 140,
         imageHeight: 140,
