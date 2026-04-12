@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import './App.css';
+import './style.css';
 import { supabase } from "./supabaseClient";
 import { useNavigate } from "react-router-dom";
 import Swal from 'sweetalert2';
