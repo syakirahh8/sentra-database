@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import "./app.css";
+import "./app.csss";
 
 // Assets
 import sentraIcon from "./assets/Sentra Icon.svg";
