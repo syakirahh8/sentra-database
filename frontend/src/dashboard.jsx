@@ -82,7 +82,12 @@ function Dashboard({ session }) {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { position: 'bottom' },
+      legend: { 
+        display: false
+      },
+      tooltip: {
+        enabled: true
+      }
     },
   };
 
@@ -244,7 +249,7 @@ function Dashboard({ session }) {
             <div className="col-lg-5 mb-4">
               <div className="custom-card">
                 <div className="d-flex justify-content-between align-items-center mb-4">
-                  <h5 className="fw-bold mb-0">{viewingDate} {currentDate.toLocaleDateString('en-US', { month: 'long' })}</h5>
+                  <h5 className="view-date fw-bold mb-0" style={{ fontFamily: "'Power Grotesk', sans-serif" }}>{viewingDate} {currentDate.toLocaleDateString('en-US', { month: 'long' })}</h5>
                   {isReadOnly && <span className="badge badge-custom p-2">Recorded</span>}
                 </div>
                 <form onSubmit={handleSubmit}>
@@ -271,10 +276,14 @@ function Dashboard({ session }) {
             {/* Calendar */}
             <div className="col-lg-7">
               <div className="custom-card">
-                <div className="d-flex justify-content-between align-items-center mb-4">
-                  <button className="btn btn-sm btn-outline-info border-0" onClick={() => changeMonth(-1)}>❮</button>
-                  <h5 className="fw-bold mb-0">{currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</h5>
-                  <button className="btn btn-sm btn-outline-info border-0" onClick={() => changeMonth(1)}>❯</button>
+                <div className="calendar-navigation">
+                  <button className="nav-btn" onClick={() => changeMonth(-1)}>❮</button>
+                  <div className="month-display">
+                    <h5 className="fw-bold mb-0">
+                      {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                    </h5>
+                  </div>
+                  <button className="nav-btn" onClick={() => changeMonth(1)}>❯</button>
                 </div>
                 <div className="row text-center mb-2 fw-bold text-muted" style={{ fontSize: "0.8rem" }}>
                   {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => <div key={d} className="col">{d}</div>)}
