@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { supabase } from "./supabaseClient";
-import Swal from "sweetalert2";
+import Swal from 'sweetalert2';
 import { useNavigate } from "react-router-dom";
-import "./App.css";
+import "./style.css";
 
 // Assets
 import successIcon from "./assets/success-image.png";
