@@ -23,7 +23,7 @@ function Login() {
     if (isRegistering && password !== confirmPassword) {
       return Swal.fire({
         title: "Oops!",
-        text: "Passwords do not match!",
+        text: "Passwords do not match",
         icon: "warning",
         confirmButtonColor: "#26C6DA",
       });
@@ -36,7 +36,7 @@ function Login() {
         const { error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
         Swal.fire({
-          title: "Registration successful!",
+          title: "Registration successful",
           text: "Please check your email",
           imageUrl: successIcon,
           imageWidth: 150,
