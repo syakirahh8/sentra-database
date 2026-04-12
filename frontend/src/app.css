@@ -189,18 +189,11 @@ body {
 }
 
 .step-card-1 img,
+.step-card-2 img,
+.step-card-3 img,
 .step-card-4 img {
     position: absolute;
-    bottom: 0;
-    left: 60%;
-    transform: translateX(-50%);
-    width: 90%;
-}
-
-.step-card-2 img,
-.step-card-3 img {
-    position: absolute;
-    bottom: -20px;
+    bottom: -5px;
     left: 0;
     width: 100%;
 }
