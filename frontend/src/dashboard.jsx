@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import './App.css';
 import { supabase } from "./supabaseClient";
 import { useNavigate } from "react-router-dom";
+import Swal from 'sweetalert2';
 
 // Assets
 import sentraIcon from "./assets/Sentra Icon.svg";
@@ -20,6 +21,9 @@ import goodCal from "./assets/mood_calendar_image/good-img.png";
 import okayCal from "./assets/mood_calendar_image/okay-img.png";
 import sadCal from "./assets/mood_calendar_image/sad-img.png";
 import stressCal from "./assets/mood_calendar_image/stress-img.png";
+
+import errorImg from "./assets/error-image.png"
+import successImg from "./assets/success-image.png"
 
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Pie } from 'react-chartjs-2';
@@ -43,7 +47,6 @@ function Dashboard({ session }) {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-
       navigate("/");
     } catch (error) {
       console.error("Error logging out:", error.message);
@@ -158,7 +161,18 @@ function Dashboard({ session }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedMood) return alert("Choose your mood!");
+
+    if (!selectedMood) {
+      return Swal.fire({
+        title: 'Oops',
+        text: 'Please select a mood before submitting.',
+        imageUrl: errorImg,
+        imageWidth: 140,
+        imageHeight: 140,
+        imageAlt: 'Warning Image',
+        confirmButtonColor: '#04C4D9',
+      });
+    }
 
     try {
       const submissionDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), viewingDate);
@@ -170,10 +184,23 @@ function Dashboard({ session }) {
       }]);
 
       if (error) throw error;
-      alert("Mood saved successfully!");
+
+      Swal.fire({
+        title: 'Mood Saved',
+        imageUrl: successImg,
+        imageWidth: 140,
+        imageHeight: 140,
+        confirmButtonColor: '#04C4D9',
+      });
+
       fetchMoodData();
     } catch (err) {
-      alert(err.message);
+      Swal.fire({
+        title: 'Error',
+        text: err.message,
+        imageUrl: errorImg,
+        confirmButtonColor: '#F2624E',
+      });
     }
   };
 
